@@ -1,0 +1,75 @@
+# This is a basic workflow to help you get started with Actions
+
+name: testsuite-CI
+
+# Controls when the action will run. Triggers the workflow on push or pull request
+# events but only for the master branch
+on:
+  push:
+    branches:
+      - '**'  # trigger on push to all branches!
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "build"
+  build:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python: [3.6]
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+    # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+    - uses: actions/checkout@v2
+      
+    - name: Setup Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python }}
+    
+    - name: Cache NEST
+      id: cache-nest2
+      uses: actions/cache@v2
+      with:
+        path: ${{ github.workspace }}/nest
+        key: ${{ runner.os }}-nest2
+
+    - name: Download & Install NEST
+      if: steps.cache-nest2.outputs.cache-hit != 'true'
+      run: |
+        sudo apt-get install gfortran libgsl-dev cython
+        pwd
+        cd ${{ github.workspace }}        
+        cd nest
+        mkdir install
+        wget https://github.com/nest/nest-simulator/archive/v2.20.0.tar.gz
+        tar -xvf v2.20.0.tar.gz 
+        rm v2.20.0.tar.gz 
+        cd nest-simulator-2.20.0
+        mkdir build && cd build
+        export TMP_NEST_INSTALL_DIR="${{ github.workspace }}/nest/install"
+        cmake -DCMAKE_INSTALL_PREFIX:PATH="${TMP_NEST_INSTALL_DIR}" -Dwith-mpi=ON -Dwith-openmp=ON -Dwith-python=3 ..
+        make -j 2
+        make install 
+    
+    - name: Verify NEST installation
+      run: |
+        source nest/install/bin/nest_vars.sh
+        env | grep NEST
+
+    - name: Cache dependencies
+      id: cache-depsX
+      uses: actions/cache@v2
+      with:
+          path: .tox/
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements_base.txt') }}
+ 
+    - name: Download & run tox 
+      run: |
+        sudo apt-get install libgsl-dev cython
+        pip install tox==3.18.1
+        export HOME=${{ github.workspace }}
+        source nest/install/bin/nest_vars.sh
+        tox -e py36

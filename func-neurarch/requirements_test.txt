@@ -1,0 +1,16 @@
+nltk
+librosa
+psutil
+pandas
+tqdm
+seaborn
+more_itertools
+matplotlib>=2.1.0
+python-mnist
+numpy>=1.14.2
+pyspike>=0.6.0
+scikit-learn>=0.20.2
+scipy>=1.0.1
+hickle>=3.3.0
+tables
+pytest==5.4.3
