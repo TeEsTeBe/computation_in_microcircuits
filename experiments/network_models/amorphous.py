@@ -8,12 +8,16 @@ from experiments.utils import connection_utils, compatability
 
 
 class AmorphousCircuit(Microcircuit):
+    """ Microcircuit model with scrambled connections """
 
     def __init__(self, N=560, S_rw=119.3304, multimeter_sample_interval=30., gM_exc=100., gM_inh=0.,
-                 disable_filter_neurons=False, neuron_model=None, disable_conductance_noise=False):
+                 disable_filter_neurons=False, neuron_model=None, disable_conductance_noise=False, vt_l23exc=None,
+                 vt_l23inh=None, vt_l4exc=None, vt_l4inh=None, vt_l5exc=None, vt_l5inh=None):
         super().__init__(N=N, S_rw=S_rw, multimeter_sample_interval=multimeter_sample_interval,
                          gM_exc=gM_exc, gM_inh=gM_inh, disable_filter_neurons=disable_filter_neurons,
-                         neuron_model=neuron_model, disable_conductance_noise=disable_conductance_noise)
+                         neuron_model=neuron_model, disable_conductance_noise=disable_conductance_noise,
+                         vt_l23exc=vt_l23exc, vt_l23inh=vt_l23inh, vt_l4exc=vt_l4exc,
+                         vt_l4inh=vt_l4inh, vt_l5exc=vt_l5exc, vt_l5inh=vt_l5inh)
         self.network_type = 'amorphous'
 
     def connect_net(self, print_connections=False):
@@ -88,6 +92,14 @@ class AmorphousCircuit(Microcircuit):
         return connection_ids_from_to
 
     def connect_neurons_randomly_new(self, syn_dicts):
+        """ Scrambles the data-based connectivity structure
+
+        Parameters
+        ----------
+        syn_dicts: dict
+            dictionary with all connections
+
+        """
 
         exc_inh_neuron_dict = self.get_neurons_separated_by_exc_inh()
         exc_inh_ids = {

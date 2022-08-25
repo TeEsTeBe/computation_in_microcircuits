@@ -6,19 +6,25 @@ from experiments.utils import connection_utils, compatability
 
 
 class DegreeControlledCircuit(Microcircuit):
+    """ Data-based Microcircuit with scrambled connections, but kept degree distributions """
 
     def __init__(self, N=560, S_rw=119.3304, multimeter_sample_interval=30., gM_exc=100., gM_inh=0.,
                  remove_io_specificity=False, disable_filter_neurons=False, neuron_model=None,
-                 disable_conductance_noise=False):
+                 disable_conductance_noise=False, vt_l23exc=None,
+                 vt_l23inh=None, vt_l4exc=None, vt_l4inh=None, vt_l5exc=None, vt_l5inh=None):
         super().__init__(N=N, S_rw=S_rw, multimeter_sample_interval=multimeter_sample_interval,
                          gM_inh=gM_inh, gM_exc=gM_exc, disable_filter_neurons=disable_filter_neurons,
-                         neuron_model=neuron_model, disable_conductance_noise=disable_conductance_noise)
+                         neuron_model=neuron_model, disable_conductance_noise=disable_conductance_noise,
+                         vt_l23exc=vt_l23exc, vt_l23inh=vt_l23inh, vt_l4exc=vt_l4exc,
+                         vt_l4inh=vt_l4inh, vt_l5exc=vt_l5exc, vt_l5inh=vt_l5inh)
         self.network_type = 'amorphous'
         self.remove_io_specificity = remove_io_specificity
         if remove_io_specificity:
             self.scramble_neurons()
 
     def scramble_neurons(self):
+        """ Scrambles the data-based connectivity structure, but keeps the degree distributions """
+
         neurons_exc_inh = self.get_neurons_separated_by_exc_inh()
         neuron_ids_exc = list(neurons_exc_inh['exc'].global_id)
         neuron_ids_inh = list(neurons_exc_inh['inh'].global_id)

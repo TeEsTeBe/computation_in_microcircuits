@@ -5,6 +5,7 @@ from experiments.tasks.base_tasks import BaseTasks
 
 
 class FiringRateTask(BaseTasks):
+    """ Class which defines the tasks that are based on the firing rates of the two input streams """
 
     def __init__(self, steps_per_trial=15, step_duration=30., discard_steps=0, train_trials=1500, test_trials=300,
                  minrate=15., maxrate=25., dimensions=4, rate_window=15., max_delay=0):
@@ -24,6 +25,15 @@ class FiringRateTask(BaseTasks):
         self.targets = self.create_targets()
 
     def create_targets(self):
+        """ Creates the task target values
+
+        Returns
+        -------
+        dict
+            dictionary with the target values for the different tasks
+
+        """
+
         r1_array = np.array(self.get_standard_target_s1(delay=0))
         r2_array = np.array(self.get_standard_target_s2(delay=0))
         targets = {
@@ -40,6 +50,24 @@ class FiringRateTask(BaseTasks):
         return targets
 
     def create_spike_generators(self, input_values):
+        """ Creates the devices that generate the spikes for the task inputs
+
+        Parameters
+        ----------
+        input_values: ndarray or list
+            input values which should be represented by the spike inputs
+
+        Returns
+        -------
+        NEST devices
+            NEST spike generators
+        list
+            list of list with the spike times for each generator
+        list
+            list of rates of the spike patterns
+
+        """
+
         spike_generators = nest.Create('spike_generator', n=self.dimensions)
         spike_times_per_generator = dict((id, []) for id in spike_generators.global_id)
 

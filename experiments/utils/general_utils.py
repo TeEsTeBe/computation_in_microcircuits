@@ -13,6 +13,8 @@ from experiments.utils import compatability
 
 
 def spikelist_from_recorder(spikedetector, stop=None, start=None):
+    """ Creates a fna SpikeList from a given spike detector """
+
     detector_status = nest.GetStatus(spikedetector)[0]['events']
     senders = detector_status['senders']
     times = detector_status['times']
@@ -42,6 +44,8 @@ def align_tstart_and_tstop(spikelist1, spikelist2):
 
 
 def get_CC_for_combinations(pop_spikelist_dict, timebin):
+    """ Calculates the pairwise pearson correlatoin coefficient"""
+
     CC_combinations = {}
     for popname1, popname2 in itertools.combinations(pop_spikelist_dict.keys(), r=2):
         spikelist1 = pop_spikelist_dict[popname1]
@@ -54,6 +58,8 @@ def get_CC_for_combinations(pop_spikelist_dict, timebin):
 
 
 def get_spike_statistics(population_spikedetector_dict):
+    """ Calculates different spiking statistics """
+
     print('\ncalculating spike statistics ...')
     spike_lists = {}
     for populationname, detector in population_spikedetector_dict.items():

@@ -57,13 +57,14 @@ result:
 usage: run_tasks.py [-h] [--network_name NETWORK_NAME] [--N N] [--S_rw S_RW] [--S1 S1] [--S2 S2] [--reset_neurons] [--reset_synapses] [--steps_per_trial STEPS_PER_TRIAL] [--discard_steps DISCARD_STEPS]
                     [--train_trials TRAIN_TRIALS] [--test_trials TEST_TRIALS] [--step_duration STEP_DURATION] [--raster_plot_duration RASTER_PLOT_DURATION] [--max_delay MAX_DELAY]
                     [--spike_statistics_duration SPIKE_STATISTICS_DURATION] [--runtitle RUNTITLE] [--num_threads NUM_THREADS] [--gM_exc GM_EXC] [--gM_inh GM_INH] [--ok_if_folder_exists] [--rate_tasks]
-                    [--input_dimensions INPUT_DIMENSIONS] [--freeze_last_input] [--start_s2 START_S2] [--group_name GROUP_NAME] [--neuron_model NEURON_MODEL] [--disable_conductance_noise]
+                    [--input_dimensions INPUT_DIMENSIONS] [--freeze_last_input] [--start_s2 START_S2] [--group_name GROUP_NAME] [--neuron_model NEURON_MODEL] [--disable_conductance_noise] [--vt_l23exc VT_L23EXC]
+                    [--vt_l23inh VT_L23INH] [--vt_l4exc VT_L4EXC] [--vt_l4inh VT_L4INH] [--vt_l5exc VT_L5EXC] [--vt_l5inh VT_L5INH]
 
 optional arguments:
   -h, --help            show this help message and exit
   --network_name NETWORK_NAME
-                        Network model, which should solve the task. Possible values: microcircuit, amorphous, degreecontrolled, degreecontrolled_no_io_specificity, smallworld, smallworld_norandomweight,microcircuit_static,
-                        microcircuit_random_dynamics
+                        Network model, which should solve the task. Possible values: microcircuit, amorphous, degreecontrolled, degreecontrolled_no_io_specificity, smallworld,
+                        smallworld_norandomweight,microcircuit_static, microcircuit_random_dynamics
   --N N                 Number of neurons in the network. Default: 560
   --S_rw S_RW           Scaling factor for the recurrent weights. Default: 66825/N (static synapses: 66825/N/73)
   --S1 S1               Scaling factor for the weights of the connections from the first input stream
@@ -97,13 +98,23 @@ optional arguments:
   --input_dimensions INPUT_DIMENSIONS
                         Number of spike trains per input stream. Default for spike pattern classification is 40 and for rate tasks is 4
   --freeze_last_input   If set, the spike patterns of the last step for each trial is fixed
-  --start_s2 START_S2   Start time of input stream 2 in ms. Default value is 0 and should not be changed,because this messes up the task results. This is only needed to get a rasterplot like in the Häusler Maass 2006 paper.
+  --start_s2 START_S2   Start time of input stream 2 in ms. Default value is 0 and should not be changed,because this messes up the task results. This is only needed to get a rasterplot like in the Häusler Maass 2006
+                        paper.
   --group_name GROUP_NAME
                         Name of the group of experiments. This is also the parent folder name inside the data folder, where the results are stored.
   --neuron_model NEURON_MODEL
                         Neuron model (hh_cond_exp_destexhe or iaf_cond_exp)
   --disable_conductance_noise
                         Disables the conductance noise in the HH neuron
+  --vt_l23exc VT_L23EXC
+                        Firing threshold for population L23 exc.
+  --vt_l23inh VT_L23INH
+                        Firing threshold for population L23 inh.
+  --vt_l4exc VT_L4EXC   Firing threshold for population L4 exc.
+  --vt_l4inh VT_L4INH   Firing threshold for population L4 inh.
+  --vt_l5exc VT_L5EXC   Firing threshold for population L5 exc.
+  --vt_l5inh VT_L5INH   Firing threshold for population L5 inh.
+
 ```
 
 ## Creating job scripts

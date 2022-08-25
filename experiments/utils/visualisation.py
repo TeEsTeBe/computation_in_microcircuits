@@ -10,6 +10,7 @@ from experiments.utils import general_utils
 
 
 def raster_plots(spike_detectors, bin_width=10., save_dir=None, show=True, name=''):
+    """ Creates a raster plot for each population """
 
     for pop, sdet in spike_detectors.items():
         spk_times = nest.GetStatus(sdet)[0]['events']['times']
@@ -24,6 +25,8 @@ def raster_plots(spike_detectors, bin_width=10., save_dir=None, show=True, name=
 
 
 def combined_raster_plot(spike_detectors, xlim=None):
+    """ Creates a combined raster plot containing all populations"""
+
     plt.figure(figsize=(15, 8))
     tick_positions = []
     tick_labels = []
@@ -76,6 +79,8 @@ def combined_raster_plot(spike_detectors, xlim=None):
 
 
 def firing_rate_hist(ax, spk_det, sim_time, num_neurons, title, cut_first_ms=200., color='black'):
+    """ Creates a plot of a firing rate histograms """
+
     events = nest.GetStatus(spk_det, 'events')
     rates = np.zeros(num_neurons)
 
@@ -107,6 +112,7 @@ def firing_rate_hist(ax, spk_det, sim_time, num_neurons, title, cut_first_ms=200
 
 
 def plot_all_firing_rate_hists(spike_detectors, pop_counts, sim_time, no_plots=False, cut_first_ms=200.):
+    """ Plots firing rate histograms for all populations """
 
     layers = ['23', '4', '5']
 
@@ -133,6 +139,8 @@ def plot_all_firing_rate_hists(spike_detectors, pop_counts, sim_time, no_plots=F
 
 
 def store_firing_rate_histograms(network, raster_plot_duration, results_folder, spike_detectors, cut_first_ms=0.):
+    """ Creates firing rate histograms for all populations and stores them """
+
     firingrates_per_pop = plot_all_firing_rate_hists(spike_detectors, network.pop_counts, raster_plot_duration,
                                                      cut_first_ms=cut_first_ms)
     plt.savefig(os.path.join(results_folder, f'firingrates_{raster_plot_duration}ms_cut{cut_first_ms}ms.pdf'))
@@ -141,6 +149,8 @@ def store_firing_rate_histograms(network, raster_plot_duration, results_folder, 
 
 
 def store_rasterplot(results_folder, spike_detectors, xlim=None):
+    """ Creates raste plots for all populations and stores them """
+
     spikedetector_events = combined_raster_plot(spike_detectors, xlim=xlim)
     xlim_string = '' if xlim is None else f'_{xlim[1]}ms'
     with open(os.path.join(results_folder, f'spikedetector_events{xlim_string}.pkl'), 'wb') as spkevents_file:
@@ -149,6 +159,8 @@ def store_rasterplot(results_folder, spike_detectors, xlim=None):
 
 
 def plot_neuron_sample_traces(results_folder, sample_multimeter):
+    """ Plots membrane voltage traces of a random sample of neurons """
+
     # plot vm traces of random neuron sample
     sample_events = nest.GetStatus(sample_multimeter)[0]['events']
     all_ids = np.unique(sample_events['senders'])
@@ -162,6 +174,8 @@ def plot_neuron_sample_traces(results_folder, sample_multimeter):
 
 
 def plot_task_result_bars(result_dicts, axes=None, readoutnames=None, width=0.4, offset=0., color=None, label=None, alpha=1., ecolor=None, **barargs):
+    """ Creates bar plot containing the results of all tasks  """
+
     if ecolor is None:
         ecolor = color
     tasknames = list(result_dicts[0].keys())

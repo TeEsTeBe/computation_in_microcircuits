@@ -5,6 +5,7 @@ from experiments.tasks.base_tasks import BaseTasks
 
 
 class SpikePatternClassification(BaseTasks):
+    """ Class which defines the tasks that are based on spatio temporal spike patterns """
 
     def __init__(self, steps_per_trial=15, step_duration=30., discard_steps=0, train_trials=1500, test_trials=300,
                  spikerate=20., dimensions=40, templates_per_step=2, jitter_std=1., freeze_last_input=False, start_s2=0.,
@@ -44,6 +45,15 @@ class SpikePatternClassification(BaseTasks):
         self.targets = self.create_targets()
 
     def create_targets(self):
+        """ Creates the task target values
+
+        Returns
+        -------
+        dict
+            dictionary with the target values for the different tasks
+
+        """
+
         targets = {
             'spike_pattern_classification_S1': self.get_standard_target_s1(delay=0),
             'spike_pattern_classification_S2': self.get_standard_target_s2(delay=0),
@@ -62,7 +72,15 @@ class SpikePatternClassification(BaseTasks):
         return targets
 
     def generate_spike_pattern_templates(self):
-        # TODO: docstring
+        """ Generates the spike pattern templates for all steps of a trial
+
+        Returns
+        -------
+        list
+            list of lists with spike patterns for all input steps
+
+        """
+
         spike_pattern_templates = [[] for _ in range(self.steps_per_trial)]
         for step_nr in range(self.steps_per_trial):
             start_time = 0.1
@@ -75,6 +93,23 @@ class SpikePatternClassification(BaseTasks):
         return spike_pattern_templates
 
     def add_jitter(self, spike_times, max_time, min_time=0.1):
+        """ Jitters the given spike times with by a normal distribution with standard deviation 1
+
+        Parameters
+        ----------
+        spike_times: ndarray
+            numpy array containing the spike times to be jittered
+        max_time: float
+            defines the upper bound for spike times
+        min_time: float
+            defines the lower bound for spike times
+
+        Returns
+        -------
+        ndarray
+            jittered spike times
+
+        """
 
         if len(spike_times) > 0:
             noise_array = np.random.normal(0, scale=self.jitter_std, size=len(spike_times))
@@ -93,6 +128,21 @@ class SpikePatternClassification(BaseTasks):
         return jittered_spikes
 
     def create_spike_generators(self, input_values, spike_templates_per_step, start=0.):
+        """ Creates the devices that generate the spikes for the task inputs
+
+        Parameters
+        ----------
+        input_values: ndarray or list
+            input values which should be represented by the spike inputs
+
+        Returns
+        -------
+        NEST devices
+            NEST spike generators
+        list
+            list of list with the spike times for each generator
+
+        """
         n_generators = len(spike_templates_per_step[0][0])
         spike_generators = nest.Create('spike_generator', n=n_generators)
         spike_times_per_generator = dict((id, []) for id in spike_generators.global_id)
@@ -117,6 +167,20 @@ class SpikePatternClassification(BaseTasks):
         return spike_generators, spike_times_per_generator
 
     def get_xor_target(self, delay=0):
+        """ Creates the XOR task target values
+
+        Parameters
+        ----------
+        delay: int
+            number of delay steps the XOR target calculation should be based on
+
+        Returns
+        -------
+        ndarray
+            target values of the XOR task
+
+        """
+
         s1_target = self.get_standard_target_s1(delay=delay)
         s2_target = self.get_standard_target_s2(delay=delay)
 

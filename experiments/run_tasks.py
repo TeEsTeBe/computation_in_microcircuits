@@ -25,7 +25,8 @@ class SpikePatternTaskRunner:
                  steps_per_trial=15, discard_steps=0, train_trials=1500, test_trials=300, step_duration=30.,
                  runtitle='defaultname', raster_plot_duration=450., max_delay=1, spike_statistics_duration=10000., num_threads=8,
                  gM_exc=100., gM_inh=0., ok_if_folder_exists=False, rate_tasks=False, input_dimensions=40, freeze_last_input=False,
-                 start_s2=0., group_name='defaultgroupname', neuron_model=None, disable_conductance_noise=False):
+                 start_s2=0., group_name='defaultgroupname', neuron_model=None, disable_conductance_noise=False,
+                 vt_l23exc=None, vt_l23inh=None, vt_l4exc=None, vt_l4inh=None, vt_l5exc=None, vt_l5inh=None):
 
         argument_dict = locals().copy()
         del argument_dict['self']
@@ -64,45 +65,51 @@ class SpikePatternTaskRunner:
         self.freeze_last_input = freeze_last_input
         self.start_s2 = start_s2
         self.disabel_conductance_noise = disable_conductance_noise
+        self.vt_l23exc = vt_l23exc
+        self.vt_l23inh = vt_l23inh
+        self.vt_l4exc = vt_l4exc
+        self.vt_l4inh = vt_l4inh
+        self.vt_l5exc = vt_l5exc
+        self.vt_l5inh = vt_l5inh
 
     def create_network(self):
         print('Creating network ...')
+        network_parameters = {
+            'N': self.N,
+            'S_rw': self.S_rw,
+            'gM_exc': self.gM_exc,
+            'gM_inh': self.gM_inh,
+            'multimeter_sample_interval': self.step_duration,
+            'neuron_model': self.neuron_model,
+            'disable_conductance_noise': self.disabel_conductance_noise,
+            'vt_l23exc': self.vt_l23exc,
+            'vt_l23inh': self.vt_l23inh,
+            'vt_l4exc': self.vt_l4exc,
+            'vt_l4inh': self.vt_l4inh,
+            'vt_l5exc': self.vt_l5exc,
+            'vt_l5inh': self.vt_l5inh,
+        }
         if self.network_name == 'microcircuit':
-            network = Microcircuit(N=self.N, S_rw=self.S_rw, gM_exc=self.gM_exc, gM_inh=self.gM_inh,
-                                   multimeter_sample_interval=self.step_duration, neuron_model=self.neuron_model,
-                                   disable_conductance_noise=self.disabel_conductance_noise)
+            network = Microcircuit(**network_parameters)
         elif self.network_name == 'microcircuit_static':
-            network = Microcircuit(N=self.N, S_rw=self.S_rw, gM_exc=self.gM_exc, gM_inh=self.gM_inh,
-                                   multimeter_sample_interval=self.step_duration, static_synapses=True,
-                                   neuron_model=self.neuron_model, disable_conductance_noise=self.disabel_conductance_noise)
+            network_parameters['static_synapses'] = True
+            network = Microcircuit(**network_parameters)
         elif self.network_name == 'microcircuit_random_dynamics':
-            network = Microcircuit(N=self.N, S_rw=self.S_rw, gM_exc=self.gM_exc, gM_inh=self.gM_inh,
-                                   multimeter_sample_interval=self.step_duration, random_synaptic_dynamics=True,
-                                   neuron_model=self.neuron_model, disable_conductance_noise=self.disabel_conductance_noise)
+            network_parameters['random_synaptic_dynamics'] = True
+            network = Microcircuit(**network_parameters)
         elif self.network_name == 'amorphous':
-            network = AmorphousCircuit(N=self.N, S_rw=self.S_rw, gM_exc=self.gM_exc, gM_inh=self.gM_inh,
-                                       multimeter_sample_interval=self.step_duration, neuron_model=self.neuron_model,
-                                       disable_conductance_noise=self.disabel_conductance_noise)
+            network = AmorphousCircuit(**network_parameters)
         elif self.network_name == 'degreecontrolled':
-            network = DegreeControlledCircuit(
-                N=self.N, S_rw=self.S_rw, gM_exc=self.gM_exc, gM_inh=self.gM_inh,
-                multimeter_sample_interval=self.step_duration, neuron_model=self.neuron_model,
-                disable_conductance_noise=self.disabel_conductance_noise
-            )
+            network = DegreeControlledCircuit(**network_parameters)
         elif self.network_name == 'degreecontrolled_no_io_specificity':
-            network = DegreeControlledCircuit(
-                N=self.N, S_rw=self.S_rw, gM_exc=self.gM_exc, gM_inh=self.gM_inh,
-                multimeter_sample_interval=self.step_duration, remove_io_specificity=True, neuron_model=self.neuron_model,
-                disable_conductance_noise=self.disabel_conductance_noise
-            )
+            network_parameters['remove_io_specificity'] = True
+            network = DegreeControlledCircuit(**network_parameters)
         elif self.network_name == 'smallworld':
-            network = SmallWorldCircuit(N=self.N, S_rw=self.S_rw, multimeter_sample_interval=self.step_duration,
-                                        random_weight_when_unconnected=True, gM_exc=self.gM_exc, gM_inh=self.gM_inh,
-                                        neuron_model=self.neuron_model, disable_conductance_noise=self.disabel_conductance_noise)
+            network_parameters['random_weight_when_unconnected'] = True
+            network = SmallWorldCircuit(**network_parameters)
         elif self.network_name == 'smallworld_norandomweight':
-            network = SmallWorldCircuit(N=self.N, S_rw=self.S_rw, multimeter_sample_interval=self.step_duration,
-                                        random_weight_when_unconnected=False, gM_exc=self.gM_exc, gM_inh=self.gM_inh,
-                                        neuron_model=self.neuron_model, disable_conductance_noise=self.disabel_conductance_noise)
+            network_parameters['random_weight_when_unconnected'] = False
+            network = SmallWorldCircuit(**network_parameters)
         else:
             raise ValueError(f'{self.network_name} not implemented!')
 
@@ -341,6 +348,13 @@ def parse_cmd():
     parser.add_argument('--neuron_model', help='Neuron model (hh_cond_exp_destexhe or iaf_cond_exp)', default='hh_cond_exp_destexhe')
     parser.add_argument('--disable_conductance_noise', help='Disables the conductance noise in the HH neuron',
                         action='store_true', default=False)
+    # parser.add_argument('--static_scaling', help='', type=float, default=73.)
+    parser.add_argument('--vt_l23exc', help="Firing threshold for population L23 exc.", type=float, default=-52.)
+    parser.add_argument('--vt_l23inh', help="Firing threshold for population L23 inh.", type=float, default=-55.)
+    parser.add_argument('--vt_l4exc', help="Firing threshold for population L4 exc.", type=float, default=-49.)
+    parser.add_argument('--vt_l4inh', help="Firing threshold for population L4 inh.", type=float, default=-55.)
+    parser.add_argument('--vt_l5exc', help="Firing threshold for population L5 exc.", type=float, default=-57.)
+    parser.add_argument('--vt_l5inh', help="Firing threshold for population L5 inh.", type=float, default=-65.)
 
     args = parser.parse_args()
     if args.S_rw is None:

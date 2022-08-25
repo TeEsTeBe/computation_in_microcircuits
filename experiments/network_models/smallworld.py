@@ -9,20 +9,38 @@ from experiments.utils import connection_utils, general_utils, compatability
 
 
 class SmallWorldCircuit(Microcircuit):
+    """ Network whose undirected graph has a small-world structurek """
 
     def __init__(self, N=560, S_rw=119.3304, multimeter_sample_interval=30., alpha=4., beta=1.32,
                  gM_exc=100., gM_inh=0., random_weight_when_unconnected=True, disable_filter_neurons=False,
-                 neuron_model=None, disable_conductance_noise=False):
+                 neuron_model=None, disable_conductance_noise=False, vt_l23exc=None,
+                 vt_l23inh=None, vt_l4exc=None, vt_l4inh=None, vt_l5exc=None, vt_l5inh=None):
         self.network_type = 'smallworld'
         self.alpha = alpha
         self.beta = beta
         self.random_weight_when_unconnected = random_weight_when_unconnected
         super().__init__(N=N, S_rw=S_rw, multimeter_sample_interval=multimeter_sample_interval,
                          gM_exc=gM_exc, gM_inh=gM_inh, disable_filter_neurons=disable_filter_neurons,
-                         neuron_model=neuron_model, disable_conductance_noise=disable_conductance_noise)
+                         neuron_model=neuron_model, disable_conductance_noise=disable_conductance_noise,
+                         vt_l23exc = vt_l23exc, vt_l23inh = vt_l23inh, vt_l4exc = vt_l4exc,
+                         vt_l4inh = vt_l4inh, vt_l5exc = vt_l5exc, vt_l5inh = vt_l5inh)
 
     def connect_net(self, print_connections=False):
-        # see Paper by Kaiser and Hilgetag 2004 (DOI: 10.1103/PhysRevE.69.036103)
+        """ Connects the previously created neurons to create the network
+
+        for a description of the algorithm see Paper by Kaiser and Hilgetag 2004 (DOI: 10.1103/PhysRevE.69.036103)
+
+        Parameters
+        ----------
+        print_connections: bool
+            whether to print out the connections (mainly for debugging)
+
+        Returns
+        -------
+        dict
+            dictionary[source_population][target_population] = all connections from source_population to target_population
+
+        """
 
         if print_connections:
             print('printing out the connections is not implemented for SmallWorldCircuit!')
@@ -33,7 +51,7 @@ class SmallWorldCircuit(Microcircuit):
         for neuron_dict in neuron_pop_dicts:
             neuron_positions[neuron_dict['neuron'].get('global_id')] = np.random.uniform(low=0., high=1., size=2)
 
-        def get_dist(neuron1, neuron2):
+        def get_distance(neuron1, neuron2):
             pos1 = neuron_positions[neuron1.get('global_id')]
             pos2 = neuron_positions[neuron2.get('global_id')]
             distance = np.abs(np.sqrt((pos1[0] - pos2[0]) ** 2 + (pos1[1] - pos2[1]) ** 2))
@@ -49,7 +67,7 @@ class SmallWorldCircuit(Microcircuit):
         already_added_neuron_dicts = [neuron_pop_dicts[0]]
 
         for neuron_to_add_dict in tqdm(neuron_pop_dicts[1:], desc="Creating undirected Small World Network"):
-            distances = [get_dist(neuron_to_add_dict['neuron'], added_neuron_dict['neuron']) for added_neuron_dict in already_added_neuron_dicts]
+            distances = [get_distance(neuron_to_add_dict['neuron'], added_neuron_dict['neuron']) for added_neuron_dict in already_added_neuron_dicts]
             probabilities = [get_conn_prob(dist) for dist in distances]
 
             rnd_values = np.random.uniform(low=0., high=1., size=len(already_added_neuron_dicts))

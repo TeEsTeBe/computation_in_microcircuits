@@ -4,6 +4,7 @@ import nest
 
 
 class BaseModel(ABC):
+    """Abstract basis class which all models should inherit from to make sure all necessary functions are implemented"""
 
     base_neuron_pars = {
         'g_L': 15.5862,
@@ -45,21 +46,61 @@ class BaseModel(ABC):
 
     @abstractmethod
     def connect_input_stream1(self, spike_generators, scaling_factor):
+        """ Function that defines how the first input stream is connected to the network model
+
+        Parameters
+        ----------
+        spike_generators : NEST device list
+            devices that generate the spikes of the first input stream`
+        scaling_factor: float
+            scaling factor for the connections from the first input stream to the network
+
+        """
+
         pass
 
     @abstractmethod
     def connect_input_stream2(self, spike_generators, scaling_factor):
+        """ Function that defines how the second input stream is connected to the network model
+
+        Parameters
+        ----------
+        spike_generators : NEST device list
+            devices that generate the spikes of the second input stream`
+        scaling_factor: float
+            scaling factor for the connections from the second input stream to the network
+
+        """
+
         pass
 
     @abstractmethod
     def calculate_state_matrices(self):
+        """ Compiles the state matrices and stores them. You need to call this function before get_state_matrices() """
         pass
 
     @abstractmethod
     def get_state_matrices(self, discard_steps, steps_per_trial):
+        """ Returns the state matrices (you have to call calculate_state_matrices() first)
+
+        Parameters
+        ----------
+        discard_steps: int
+            number of warm up steps that should be discarded at the beginning
+        steps_per_trial: int
+            number of steps a single trial is made of
+
+        Returns
+        -------
+        dict
+            dictionary with state matrices
+
+        """
+
         pass
 
     def install_nest_modules(self):
+        """ Installs the neuron model if it is not already installed """
         if self.neuron_model not in nest.Models():
             nest.Install('destexhemodule')
             print('Destexhe NEST module installed')

@@ -7,6 +7,19 @@ from experiments.utils import compatability
 
 
 def create_synapse_parameters(synapse_model='tsodyks2_synapse'):
+    """ Creates the default synapse parameters for the given synapse model
+
+    Parameters
+    ----------
+    synapse_model: str
+        name of the synapse model
+
+    Returns
+    -------
+    dict
+        dictionary containing the synaptic parameters
+
+    """
 
     if synapse_model == 'static_synapse':
         syn_params_from_to = {
@@ -49,6 +62,8 @@ def create_synapse_parameters(synapse_model='tsodyks2_synapse'):
 
 
 def calc_synaptic_weight_based_on_matlab_code(psp_amp, scaling_factor, exc_or_inh_src, g_L):
+    """ Calculates the synaptic weights like it was done in the Matlab code by Häusler and Maass """
+
     exc_codes = ['e', 'exc', 'ex', 'excitatory']
     inh_codes = ['i', 'inh', 'in', 'inhibitory']
     if exc_or_inh_src in exc_codes:
@@ -74,6 +89,8 @@ def calc_synaptic_weight_based_on_matlab_code(psp_amp, scaling_factor, exc_or_in
 
 
 def get_conn_parameter_distribution(mean, part_std, size, minimum=0., maximum=2**32, use_truncnorm=False):
+    """ Creates distributed connection parameter values """
+
     if use_truncnorm:
         a = (minimum - mean) / abs(0.7 * mean)
         b = maximum
@@ -88,6 +105,8 @@ def get_conn_parameter_distribution(mean, part_std, size, minimum=0., maximum=2*
 
 
 def randomize_conn_parameter(source, target, param, mean, part_std, minimum=0., maximum=2**32, use_truncnorm=False):
+    """ Randomizes a parameter of all connections between the source and target neurons """
+
     conn = nest.GetConnections(source=source, target=target)
     distribution = get_conn_parameter_distribution(mean=mean, part_std=part_std, size=len(conn), minimum=minimum,
                                                    maximum=maximum, use_truncnorm=use_truncnorm)
@@ -96,6 +115,7 @@ def randomize_conn_parameter(source, target, param, mean, part_std, minimum=0., 
 
 
 def connect_population_pair(source_ids, target_ids, syn_dict, conn_dict, static_synapses=False):
+    """ Connects two populations and also randomizes the connection parameters """
 
     connections = nest.Connect(source_ids, target_ids, conn_spec=conn_dict, syn_spec=syn_dict)
     randomize_conn_parameter(source_ids, target_ids, 'weight', syn_dict['weight'], 0.7)
@@ -120,6 +140,8 @@ def connect_population_pair(source_ids, target_ids, syn_dict, conn_dict, static_
 
 
 def get_in_and_outdegrees(neuron_nodecollection):
+    """ Calculates the in- and out-degrees of the given neuron collection """
+
     outdegrees = []
     indegrees = []
     for neuron in neuron_nodecollection:
@@ -139,6 +161,8 @@ def get_in_and_outdegrees(neuron_nodecollection):
 
 
 def get_total_degrees_per_pop(network):
+    """ calculates the total degrees per population """
+
     degrees_per_pop = {}
     for pop_name, pop_neurons in network.populations.items():
         indegrees, outdegrees = get_in_and_outdegrees(pop_neurons)
@@ -152,6 +176,19 @@ def get_total_degrees_per_pop(network):
 
 
 def get_network_graph(network):
+    """ Creates an undirected networkx graph from the connectivity of the given network
+
+    Parameters
+    ----------
+    network: BaseModel
+
+    Returns
+    -------
+    networkx graph
+        networkx graph of the given network model
+
+    """
+
     network_neurons = nest.NodeCollection([])
     for neurons in network.populations.values():
         network_neurons += neurons
@@ -165,6 +202,7 @@ def get_network_graph(network):
 
 
 def conductances_to_psp(weights, g_L):
+    """ Changes the weights from conductance based to current based """
 
     E_syn_exc = 0.
     E_syn_inh = -75
@@ -178,6 +216,8 @@ def conductances_to_psp(weights, g_L):
 
 
 def get_input_data_per_neuron(network):
+    """ Calculates the data for the incoming connections for every neuron in the network """
+
     input_data = {}
     for popname, neurons in network.populations.items():
         input_data[popname] = {}

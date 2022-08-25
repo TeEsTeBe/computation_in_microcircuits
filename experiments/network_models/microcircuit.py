@@ -9,6 +9,8 @@ from experiments.utils import general_utils, compatability
 
 class Microcircuit(BaseModel):
 
+    """ Data-based microcircuit model """
+
     # Connection weights in mV
     psp_amp_from_to = {
         'l23_exc': {
@@ -133,7 +135,8 @@ class Microcircuit(BaseModel):
 
     def __init__(self, N=560, S_rw=119.3304, multimeter_sample_interval=30., gM_exc=100., gM_inh=0.,
                  disable_filter_neurons=False, static_synapses=False, random_synaptic_dynamics=False, neuron_model=None,
-                 disable_conductance_noise=False):
+                 disable_conductance_noise=False, vt_l23exc=None, vt_l23inh=None, vt_l4exc=None, vt_l4inh=None,
+                 vt_l5exc=None, vt_l5inh=None):
         super().__init__()
         self.network_type = 'microcircuit'
         if neuron_model is not None:
@@ -144,6 +147,15 @@ class Microcircuit(BaseModel):
         self.gM_exc = gM_exc
         self.gM_inh = gM_inh
         self.disable_conductance_noise = disable_conductance_noise
+
+        self.v_ths = {
+            'l23_exc': vt_l23exc,
+            'l23_inh': vt_l23inh,
+            'l4_exc': vt_l4exc,
+            'l4_inh': vt_l4inh,
+            'l5_exc': vt_l5exc,
+            'l5_inh': vt_l5inh,
+        }
         self.neuron_pars = self.create_neuron_pars()
         self.populations, self.pop_counts = self.create_populations()
         self.random_synaptic_dynamics = random_synaptic_dynamics
@@ -163,6 +175,8 @@ class Microcircuit(BaseModel):
         self.statemat5exc = None
 
     def create_neuron_pars(self):
+        """ Creates and sets up the parameters for the neurons in the different populations """
+
         if self.neuron_model == 'iaf_cond_exp':
             neuron_pars_exc = self.iaf_neuron_parameters.copy()
             neuron_pars_inh = self.iaf_neuron_parameters.copy()
@@ -177,17 +191,30 @@ class Microcircuit(BaseModel):
             neuron_pars_exc['sigma_noise_in'] = 0.
 
         neuron_pars = {
-            'l23_exc': neuron_pars_exc,
-            'l23_inh': neuron_pars_inh,
-            'l4_exc': neuron_pars_exc,
-            'l4_inh': neuron_pars_inh,
-            'l5_exc': neuron_pars_exc,
-            'l5_inh': neuron_pars_inh,
+            'l23_exc': neuron_pars_exc.copy(),
+            'l23_inh': neuron_pars_inh.copy(),
+            'l4_exc': neuron_pars_exc.copy(),
+            'l4_inh': neuron_pars_inh.copy(),
+            'l5_exc': neuron_pars_exc.copy(),
+            'l5_inh': neuron_pars_inh.copy(),
         }
+
+        for pop_name, vth in self.v_ths.items():
+            if vth is not None:
+                neuron_pars[pop_name]['V_th'] = vth
 
         return neuron_pars
 
     def calculate_connection_ids_from_to(self):
+        """ Calculates all connections between all source and target populations
+
+        Returns
+        -------
+        dict
+            dict[source_population][target_population] = all connections from source_population to target_population
+
+        """
+
         connection_ids_from_to = {}
         for src_name, src_neurons in self.populations.items():
             if src_name not in connection_ids_from_to.keys():
@@ -198,6 +225,15 @@ class Microcircuit(BaseModel):
         return connection_ids_from_to
 
     def get_all_neuron_pop_dicts(self):
+        """ Compiles a list dictionaries containing a neuron and its corresponding population
+
+        Returns
+        -------
+        list
+            list of dictionaries with 'neuron' and 'pop' as keys
+
+        """
+
         neuron_pop_dicts = []
         for pop_name, pop_neurons in self.populations.items():
             for neuron in pop_neurons:
@@ -206,6 +242,15 @@ class Microcircuit(BaseModel):
         return neuron_pop_dicts
 
     def get_neurons_separated_by_exc_inh(self):
+        """ Returns all neurons of all populations separated by excitatory and inhibitory
+
+        Returns
+        -------
+        dict
+            dictionary with all excitatory neurons ('exc' key) and all inhibitory neurons ('inh' key)
+
+        """
+
         exc_neurons = None
         inh_neurons = None
         for pop_name, nodes in self.populations.items():
@@ -229,6 +274,17 @@ class Microcircuit(BaseModel):
         return neurons
 
     def create_populations(self):
+        """ Creates the neurons of all populations in NEST
+
+        Returns
+        -------
+        dict
+            dictionary with the population names as keys and the NEST neuron collections as contents
+        dict
+            dictionary with the number of neurons per layer
+
+        """
+
         # Layer 2/3
         N23 = int(self.N * 0.3)
         N23e = int(N23 * 0.8)
@@ -268,7 +324,25 @@ class Microcircuit(BaseModel):
         return populations, pop_counts
 
     def create_filter_neurons(self, population_to_imitate, filter_tau=15., static_synapses=True):
-        # TODO: docstring
+        """ Creates the neurons that will be used as spike filters
+
+        Parameters
+        ----------
+        population_to_imitate: str
+            name of the population that should be imitated by the readout that uses the filtered spikes as input
+        filter_tau: float
+            time constant for the spike filtering
+        static_synapses: bool
+            whether the connections to the filter neurons should be static
+
+        Returns
+        -------
+        dict
+            dictionary containing the created filter neurons
+        NEST device
+            NEST multimeter which is connected to all filter neurons
+
+        """
 
         filter_neurons_per_pop = {}
 
@@ -353,6 +427,20 @@ class Microcircuit(BaseModel):
         return statemats
 
     def connect_net(self, print_connections=False):
+        """ Connects the previously created neurons to create the network
+
+        Parameters
+        ----------
+        print_connections: bool
+            whether to print out the connections (mainly for debugging)
+
+        Returns
+        -------
+        dict
+            dictionary[source_population][target_population] = all connections from source_population to target_population
+
+        """
+
         connection_ids_from_to = {}
         for (src_pop, trg_w_dict), (_, trg_probs) in zip(self.psp_amp_from_to.items(), self.probabilities_from_to.items()):
             connection_ids_from_to[src_pop] = {}
@@ -396,6 +484,19 @@ class Microcircuit(BaseModel):
         self.connect_input_stream(spike_geneators, self.probabilities_from_input2, scaling_factor)
 
     def connect_input_stream(self, spike_generators, connection_probabilities, scaling_factor):
+        """ Connects an input stream to the network
+
+        Parameters
+        ----------
+        spike_generators: NEST device list
+            devices that generate the spikes of the input stream`
+        connection_probabilities: dict
+            dictionary with the connection probabilities to all populations
+        scaling_factor: float
+            scaling factor for the connections from the input stream to the network
+
+        """
+
         scaled_input_weight = connection_utils.calc_synaptic_weight_based_on_matlab_code(
             self.input_weight,
             scaling_factor,

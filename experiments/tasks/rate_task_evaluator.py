@@ -6,6 +6,7 @@ from sklearn.linear_model import LinearRegression
 
 
 class RateTaskEvaluator:
+    """ Class that implements the functionality to evaluate the rate based tasks """
 
     def __init__(self, state_matrix_dict, task_targets, train_trials, test_trials):
         self.state_matrix_dict = state_matrix_dict
@@ -16,6 +17,14 @@ class RateTaskEvaluator:
         self.readouts = []
 
     def evaluate_all_tasks(self):
+        """ Evaluates the rate based tasks
+
+        Returns
+        -------
+        dict
+            dictionary with all the evaluated metrics for all tasks
+
+        """
         print('\n## Results')
         results_dict = {}
         for statemat_name, statemat in self.state_matrix_dict.items():
