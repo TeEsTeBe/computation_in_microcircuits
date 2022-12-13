@@ -1,6 +1,6 @@
 # Characteristic columnar connectivity caters to cortical computation
 
-This repository contains the code that you need to run the experiments presented in the paper *Characteristic columnar connectivity caters to cortical computation: replication, simulation and evaluation of a microcircuit model* by
+This repository contains the code that you need to run the experiments presented in the paper [*Characteristic columnar connectivity caters to cortical computation: replication, simulation and evaluation of a microcircuit model*](https://www.frontiersin.org/articles/10.3389/fnint.2022.923468) by
 Tobias Schulte to Brinke, Renato Duarte and Abigail Morrison.
 
 
